@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patrick Speak - YouTube 英文學習</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <aside id="channels">
+            <h2 class="sidebar-title">❤️ 喜歡的頻道</h2>
+            <div class="mini-tabs">
+                <button class="mini-tab active" data-scope="video" onclick="setChannelScope('video')">🎬 影片</button>
+                <button class="mini-tab" data-scope="music" onclick="setChannelScope('music')">🎵 音樂</button>
+            </div>
+            <div class="channel-add">
+                <input type="text" id="channel-url" placeholder="貼上 YouTube 頻道..." />
+                <button id="add-channel-btn" onclick="addChannelByUrl()">加入</button>
+            </div>
+            <div id="channel-list">
+                <p class="sidebar-empty">尚無收藏頻道</p>
+            </div>
+        </aside>
+
+        <main id="main">
+            <header>
+                <h1>🎧 Patrick Speak</h1>
+                <p class="subtitle">YouTube 英文聽力學習套件</p>
+            </header>
+
+            <section id="input-section">
+                <div class="input-mode-tabs">
+                    <button class="input-mode-tab active" data-mode="video" onclick="setInputMode('video')">🎬 影片</button>
+                    <button class="input-mode-tab" data-mode="music" onclick="setInputMode('music')">🎵 音樂</button>
+                </div>
+                <div class="url-input-group">
+                    <input type="text" id="youtube-url" placeholder="貼上 YouTube 連結..." />
+                    <button id="fav-channel-star" class="url-star" onclick="addChannelFromInput()"
+                            title="收藏此影片的頻道到「喜歡的頻道」">★</button>
+                    <button id="process-btn" onclick="processVideo()">開始處理</button>
+                </div>
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>正在下載音訊與字幕，翻譯中，請稍候...</p>
+                </div>
+                <div id="error-msg" class="hidden"></div>
+            </section>
+
+            <section id="segments-section" class="hidden">
+                <div id="partial-banner" class="hidden"></div>
+                <div id="segment-tabs"></div>
+                <div id="segment-content"></div>
+            </section>
+        </main>
+
+        <aside id="sidebar">
+            <button id="theme-toggle" class="theme-btn" onclick="toggleTheme()">☀️ 亮色模式</button>
+
+            <div class="mini-tabs">
+                <button class="mini-tab active" data-scope="video" onclick="setLibraryScope('video')">📚 影片庫</button>
+                <button class="mini-tab" data-scope="music" onclick="setLibraryScope('music')">🎵 音樂盒</button>
+            </div>
+            <div id="sidebar-list">
+                <p class="sidebar-empty">尚無已處理影片</p>
+            </div>
+
+            <div class="mini-tabs">
+                <button class="mini-tab active" data-scope="video" onclick="setFavScope('video')">⭐ 我的最愛</button>
+                <button class="mini-tab" data-scope="music" onclick="setFavScope('music')">🎤 我的歌詞</button>
+            </div>
+            <h2 class="sidebar-title" id="fav-header">⭐ 我的最愛 (0)</h2>
+            <div id="fav-list">
+                <p class="sidebar-empty">點句子旁的 ★ 收藏</p>
+            </div>
+        </aside>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

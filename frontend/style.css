@@ -1,0 +1,815 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+}
+
+#app {
+    max-width: 1340px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+}
+
+#main {
+    flex: 1;
+    min-width: 0;
+    order: 2;
+}
+
+#channels {
+    order: 1;
+    width: 210px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 2rem;
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 1rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+#sidebar { order: 3; }
+
+.channel-add {
+    display: flex;
+    gap: 0.3rem;
+    margin-bottom: 0.8rem;
+}
+
+#channel-url {
+    flex: 1;
+    min-width: 0;
+    padding: 0.4rem 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #12122a;
+    color: #fff;
+    font-size: 0.8rem;
+    outline: none;
+}
+#channel-url:focus { border-color: #7c8aff; }
+
+#add-channel-btn {
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    border: none;
+    background: #7c8aff;
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#add-channel-btn:hover { background: #6b79ee; }
+
+.channel-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.4rem 0.5rem 0.6rem;
+    border-radius: 8px;
+    margin-bottom: 0.3rem;
+    transition: background 0.15s;
+}
+.channel-item:hover { background: #232342; }
+
+.channel-name {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.channel-name::before { content: "▶ "; color: #7c8aff; font-size: 0.7rem; }
+
+#current-channel-bar {
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: center;
+}
+
+.save-channel-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #3a3a5a;
+    background: rgba(124, 138, 255, 0.12);
+    color: #b8c0ff;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.save-channel-btn:hover { background: rgba(124, 138, 255, 0.22); }
+.save-channel-btn.saved { color: #4caf50; border-color: #4caf50; cursor: default; }
+
+#sidebar {
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 2rem;
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 1rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.sidebar-title {
+    font-size: 1rem;
+    color: #b8c0ff;
+    margin-bottom: 0.8rem;
+}
+
+/* 小分頁切換（影片庫/音樂盒、最愛/歌詞、頻道的 影片/音樂），共用同一組樣式 */
+.mini-tabs {
+    display: flex;
+    gap: 0.3rem;
+    margin-bottom: 0.6rem;
+}
+
+.mini-tab {
+    flex: 1;
+    padding: 0.35rem 0.4rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: #888;
+    font-size: 0.78rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+}
+.mini-tab.active {
+    background: rgba(124, 138, 255, 0.15);
+    border-color: #7c8aff;
+    color: #b8c0ff;
+}
+body.light-theme .mini-tab { border-color: #d6d9e6; color: #778; }
+body.light-theme .mini-tab.active { background: rgba(124, 138, 255, 0.1); color: #5a68e0; border-color: #7c8aff; }
+
+/* 影片庫給較大空間（約 5 項後捲動）；最愛永遠在下方可見、各自獨立捲動 */
+#sidebar-list {
+    max-height: 360px;
+    overflow-y: auto;
+    margin-bottom: 0.5rem;
+}
+#fav-list {
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+/* 主題切換鈕（側欄頂端，醒目的整列按鈕）*/
+.theme-btn {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #3a3a5a;
+    background: #232342;
+    color: #c8cdf0;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.theme-btn:hover { background: #2c2c52; }
+
+.sidebar-empty {
+    color: #666;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.lib-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    margin-bottom: 0.4rem;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.lib-item-main {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.lib-item:hover {
+    background: #232342;
+    border-color: #3a3a5a;
+}
+
+/* 上移／下移／刪除 小按鈕（影片庫與最愛共用） */
+.item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-shrink: 0;
+}
+
+.item-btn {
+    background: none;
+    border: none;
+    color: #777;
+    cursor: pointer;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 0.12rem 0.3rem;
+    border-radius: 4px;
+}
+
+.item-btn:hover { background: rgba(255, 255, 255, 0.08); color: #b8c0ff; }
+.item-del:hover { background: rgba(255, 107, 107, 0.12); color: #ff6b6b; }
+
+.lib-item.active {
+    background: rgba(124, 138, 255, 0.15);
+    border-color: #7c8aff;
+}
+
+.lib-item-title {
+    font-size: 0.85rem;
+    color: #e0e0e0;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lib-item-meta {
+    font-size: 0.72rem;
+    color: #777;
+    margin-top: 0.3rem;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.lib-badge {
+    background: #3a3a5a;
+    color: #b8c0ff;
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+    font-size: 0.68rem;
+}
+
+@media (max-width: 980px) {
+    #app {
+        flex-direction: column;
+    }
+    /* 手機：主畫面在最上，頻道與影片庫依序在下 */
+    #main { order: 0; }
+    #channels { order: 1; }
+    #sidebar { order: 2; }
+    #channels,
+    #sidebar {
+        width: 100%;
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+    #sidebar-list,
+    #fav-list {
+        flex: none;
+        max-height: none;
+        overflow-y: visible;
+    }
+}
+
+header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    font-size: 2rem;
+    color: #7c8aff;
+}
+
+.subtitle {
+    color: #888;
+    margin-top: 0.3rem;
+}
+
+.input-mode-tabs {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+}
+
+.input-mode-tab {
+    padding: 0.4rem 1.1rem;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #333;
+    border-bottom: none;
+    background: transparent;
+    color: #888;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+
+.input-mode-tab.active {
+    background: #1a1a2e;
+    color: #7c8aff;
+    border-color: #7c8aff;
+}
+
+body.light-theme .input-mode-tab { border-color: #d6d9e6; color: #778; }
+body.light-theme .input-mode-tab.active { background: #fff; color: #5a68e0; border-color: #7c8aff; }
+
+.url-input-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#youtube-url {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #1a1a2e;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+}
+
+#youtube-url:focus {
+    border-color: #7c8aff;
+}
+
+#process-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: #7c8aff;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#process-btn:hover {
+    background: #6b79ee;
+}
+
+#process-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.url-star {
+    padding: 0 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #3a3a5a;
+    background: #1a1a2e;
+    color: #666;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+.url-star:hover { color: #ffc94d; border-color: #ffc94d; }
+.url-star.on { color: #ffc94d; border-color: #ffc94d; }
+body.light-theme .url-star { background: #eef0f8; border-color: #d6d9e6; color: #b8bcc9; }
+body.light-theme .url-star:hover,
+body.light-theme .url-star.on { color: #f0a500; border-color: #f0a500; }
+
+.hidden {
+    display: none !important;
+}
+
+#loading {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #333;
+    border-top-color: #7c8aff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#error-msg {
+    color: #ff6b6b;
+    text-align: center;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 8px;
+}
+
+#partial-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    background: rgba(124, 138, 255, 0.1);
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #b8c0ff;
+}
+
+#download-all-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    border: none;
+    background: #7c8aff;
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+#download-all-btn:hover {
+    background: #6b79ee;
+}
+
+#segment-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.seg-tab {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: #1a1a2e;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.seg-tab.active {
+    background: #7c8aff;
+    color: #fff;
+    border-color: #7c8aff;
+}
+
+.mode-switcher {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mode-btn {
+    flex: 1;
+    padding: 0.7rem;
+    border-radius: 8px;
+    border: 2px solid #333;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.mode-btn.active {
+    border-color: #7c8aff;
+    color: #7c8aff;
+    background: rgba(124, 138, 255, 0.1);
+}
+
+.player-card {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.sentence-display {
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #12122a;
+    border-radius: 8px;
+}
+
+.sentence-en {
+    font-size: 1.3rem;
+    line-height: 1.6;
+    color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.sentence-zh {
+    font-size: 1.1rem;
+    color: #7c8aff;
+    line-height: 1.5;
+}
+
+.sentence-hidden {
+    visibility: hidden;
+}
+
+.sentence-counter {
+    text-align: center;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 0.8rem;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.ctrl-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #2a2a4a;
+    color: #e0e0e0;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.ctrl-btn:hover {
+    background: #3a3a5a;
+}
+
+.ctrl-btn.play-btn {
+    width: 56px;
+    height: 56px;
+    background: #7c8aff;
+    font-size: 1.4rem;
+}
+
+.ctrl-btn.play-btn:hover {
+    background: #6b79ee;
+}
+
+.toggle-btns {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.toggle-btn {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    border: 1px solid #333;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.toggle-btn.on {
+    background: rgba(124, 138, 255, 0.2);
+    border-color: #7c8aff;
+    color: #7c8aff;
+}
+
+/* 計數列 + 收藏星號 */
+.counter-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.2rem;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.15s, transform 0.1s;
+}
+
+.star-btn:hover { transform: scale(1.2); }
+.star-btn.on { color: #ffc94d; }
+
+/* 播放速度 */
+.speed-btns {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+}
+
+.speed-label {
+    font-size: 0.8rem;
+    color: #777;
+    margin-right: 0.2rem;
+}
+
+.speed-btn {
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid #333;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.speed-btn.on {
+    background: rgba(124, 138, 255, 0.2);
+    border-color: #7c8aff;
+    color: #7c8aff;
+}
+
+/* 最愛清單 */
+#fav-header { margin-top: 1.2rem; }
+
+.fav-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    margin-bottom: 0.4rem;
+    background: #161630;
+}
+
+.fav-text { cursor: pointer; flex: 1; min-width: 0; }
+
+.fav-en {
+    font-size: 0.8rem;
+    color: #d0d4f0;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.fav-zh {
+    font-size: 0.72rem;
+    color: #8a90c0;
+    margin-top: 0.2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.fav-del {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.1rem 0.3rem;
+}
+.fav-del:hover { color: #ff6b6b; }
+
+.dictation-area {
+    margin-top: 1rem;
+}
+
+.dictation-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #12122a;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 0.5rem;
+}
+
+.dictation-input:focus {
+    border-color: #7c8aff;
+}
+
+.timer-bar {
+    height: 4px;
+    background: #333;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.timer-fill {
+    height: 100%;
+    background: #7c8aff;
+    border-radius: 2px;
+    transition: width 0.1s linear;
+}
+
+.result-display {
+    margin-top: 0.8rem;
+    padding: 0.8rem;
+    background: #12122a;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.result-correct {
+    color: #4caf50;
+}
+
+.result-wrong {
+    color: #ff6b6b;
+}
+
+.progress-bar {
+    height: 3px;
+    background: #222;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #7c8aff;
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+/* ===== 亮色主題 ===== */
+body.light-theme { background: #f4f5fa; color: #2b2d42; }
+body.light-theme #youtube-url,
+body.light-theme .dictation-input {
+    background: #eef0f8; border-color: #d6d9e6; color: #2b2d42;
+}
+body.light-theme #sidebar,
+body.light-theme #channels,
+body.light-theme .player-card {
+    background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+body.light-theme #channel-url { background: #eef0f8; border-color: #d6d9e6; color: #2b2d42; }
+body.light-theme .channel-item:hover { background: #eef0f8; }
+body.light-theme .channel-name { color: #2b2d42; }
+body.light-theme .save-channel-btn { background: rgba(124, 138, 255, 0.1); border-color: #cfd4ea; color: #5a68e0; }
+body.light-theme .sentence-display,
+body.light-theme .result-display { background: #eef0f8; }
+body.light-theme .sentence-en { color: #1a1a2e; }
+body.light-theme .sentence-counter,
+body.light-theme .subtitle,
+body.light-theme .speed-label { color: #6b7090; }
+body.light-theme .seg-tab { background: #ffffff; border-color: #d6d9e6; color: #556; }
+body.light-theme .seg-tab.active { background: #7c8aff; color: #fff; border-color: #7c8aff; }
+body.light-theme .ctrl-btn { background: #e7eaf6; color: #2b2d42; }
+body.light-theme .ctrl-btn.play-btn { background: #7c8aff; color: #fff; }
+body.light-theme .mode-btn { border-color: #d6d9e6; color: #6b7090; }
+body.light-theme .mode-btn.active {
+    color: #5a68e0; background: rgba(124, 138, 255, 0.12); border-color: #7c8aff;
+}
+body.light-theme .toggle-btn,
+body.light-theme .speed-btn { border-color: #d6d9e6; color: #778; }
+body.light-theme .toggle-btn.on,
+body.light-theme .speed-btn.on {
+    color: #5a68e0; background: rgba(124, 138, 255, 0.12);
+}
+body.light-theme .lib-item:hover { background: #eef0f8; border-color: #d6d9e6; }
+body.light-theme .lib-item-title { color: #2b2d42; }
+body.light-theme .fav-item { background: #eef0f8; }
+body.light-theme .fav-en { color: #2b2d42; }
+body.light-theme .fav-zh { color: #5a68e0; }
+body.light-theme .sidebar-title { color: #5a68e0; }
+body.light-theme .theme-btn { background: #eef0f8; border-color: #d6d9e6; color: #3a3f63; }
+body.light-theme .theme-btn:hover { background: #e3e7f5; }
+body.light-theme .progress-bar { background: #e0e3ee; }
+body.light-theme #partial-banner {
+    background: rgba(124, 138, 255, 0.1); border-color: #cfd4ea; color: #5a68e0;
+}
