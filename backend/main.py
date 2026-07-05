@@ -1,3 +1,7 @@
+# 讓 `X | None` 這類 PEP 604 型別標註在 Python 3.9 也能安全執行
+# （延遲求值，不需要真的支援該語法的直譯器）
+from __future__ import annotations
+
 import os
 import json
 import time
