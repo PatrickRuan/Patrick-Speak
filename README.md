@@ -93,6 +93,22 @@
 
 ## 安裝指南
 
+### 第 0 步：取得專案
+
+先打開「終端機」（macOS 內建，Spotlight 搜尋「終端機」或「Terminal」即可找到），
+貼上以下指令，把專案下載到你的電腦（會存到你使用者資料夾裡的 `Patrick-Speak`）：
+
+```bash
+cd ~
+git clone https://github.com/PatrickRuan/Patrick-Speak.git
+cd Patrick-Speak
+```
+
+> 如果貼上 `git clone` 出現「command not found: git」，代表還沒裝 Git。macOS 會自動跳出安裝提示，
+> 照著點「安裝」即可（或執行 `xcode-select --install`），裝完後重新貼一次上面的指令。
+
+之後每次要打開終端機操作這個專案，記得先切到這個資料夾（`cd ~/Patrick-Speak`）。
+
 ### 快速安裝（推薦，一鍵搞定）
 
 只需要先手動裝好兩個「App 等級」的東西，其他都交給腳本：
@@ -100,7 +116,7 @@
 1. **Homebrew**（若尚未安裝）：到 [brew.sh](https://brew.sh) 依網站指示安裝。
 2. **Ollama**：到 [ollama.com/download](https://ollama.com/download) 下載安裝，並**打開它一次**（它會在背景常駐執行，負責英翻中）。
 
-接著在終端機切到本專案資料夾，執行：
+在同一個終端機視窗（已切到 `Patrick-Speak` 資料夾），執行：
 
 ```bash
 ./setup.sh
@@ -272,7 +288,22 @@ cp .env.example .env
 
 **不要直接把整個資料夾 zip 起來傳**——裡面的 `.venv`（Python 環境）、`audio_cache`（你的下載快取）、`models`（大型模型檔）都是本機專屬或體積龐大的內容，直接打包會超過 1GB，而且 `.venv` 在別人電腦上會直接壞掉。
 
-改用內附的打包腳本：
+### 方式 A：請朋友直接 clone GitHub（推薦）
+
+本專案已公開在 GitHub，朋友只要照著本 README「[第 0 步：取得專案](#第-0-步取得專案)」做就好：
+
+```bash
+git clone https://github.com/PatrickRuan/Patrick-Speak.git
+cd Patrick-Speak
+./setup.sh
+./start.sh
+```
+
+好處是之後你更新程式，朋友只要在資料夾裡執行 `git pull` 就能拿到最新版，不用你重新傳一次檔案。
+
+### 方式 B：打包 zip 傳給他（不方便用 GitHub 時）
+
+執行內附的打包腳本：
 
 ```bash
 ./pack.sh
@@ -285,7 +316,7 @@ cp .env.example .env
 3. 執行 `./setup.sh`（第一次安裝，含前置需求：Homebrew、Ollama）
 4. 執行 `./start.sh`（之後每次啟動）
 
-朋友只需要會**開終端機、貼指令**即可，不需要 npm、不需要懂 Python。
+不管哪種方式，朋友只需要會**開終端機、貼指令**即可，不需要 npm、不需要懂 Python。
 
 ---
 
