@@ -43,15 +43,20 @@ done
 echo ""
 if ! command -v ollama >/dev/null 2>&1; then
     warn "沒有找到 Ollama（負責把英文翻譯成中文）。"
-    echo "  請到 https://ollama.com/download 下載安裝 Ollama App，"
-    echo "  安裝完成後打開一次它（讓它在背景執行），再重新執行本腳本。"
+    echo "  請選一種方式安裝："
+    echo "    A) 圖形介面：到 https://ollama.com/download 下載 Ollama App，安裝後打開它一次"
+    echo "    B) 終端機一行安裝：curl -fsSL https://ollama.com/install.sh | sh"
+    echo "       （這個方式會直接啟動背景服務，那個終端機視窗會顯示服務日誌、"
+    echo "        看起來像卡住但其實是正常的——直接開一個新的終端機視窗繼續操作即可）"
+    echo "  安裝完成後重新執行本腳本。"
     exit 1
 fi
 ok "Ollama 已安裝"
 
 if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
     warn "Ollama 目前沒有在執行。"
-    echo "  請打開 Ollama App（它會在背景常駐執行），再重新執行本腳本。"
+    echo "  請啟動 Ollama：打開 Ollama App，或在終端機執行 \`ollama serve\`（會佔用該視窗顯示日誌，"
+    echo "  是正常現象），然後開一個新的終端機視窗重新執行本腳本。"
     exit 1
 fi
 ok "Ollama 正在執行"

@@ -12,7 +12,8 @@ fi
 
 if ! curl -s http://localhost:11434/api/tags >/dev/null 2>&1; then
     echo "⚠️  偵測不到 Ollama 在執行，翻譯功能可能會失敗。"
-    echo "   請打開 Ollama App 後再試一次（或直接繼續，稍後再開也可以）。"
+    echo "   請啟動 Ollama（打開 Ollama App，或終端機執行 ollama serve）後再試一次，"
+    echo "   或直接繼續，稍後再開也可以。"
     echo ""
 fi
 
