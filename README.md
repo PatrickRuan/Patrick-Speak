@@ -138,11 +138,22 @@ which whisper-cli
 
 ### 2. 安裝並設定 Ollama（翻譯）
 
-Ollama 是本地大型語言模型的執行平台，負責英翻中。
+Ollama 是本地大型語言模型的執行平台，負責英翻中。安裝方式擇一：
 
-1. 到 [ollama.com/download](https://ollama.com/download) 下載安裝（或 `brew install ollama`）。
-2. 啟動 Ollama（安裝後通常會自動在背景執行，於 `http://localhost:11434`）。
-3. 下載一個翻譯模型，擇一即可：
+- **圖形介面**：到 [ollama.com/download](https://ollama.com/download) 下載安裝，安裝後打開它一次（它會在背景常駐執行）。
+- **終端機一行安裝**：
+  ```bash
+  curl -fsSL https://ollama.com/install.sh | sh
+  ```
+  這個方式會直接啟動背景服務並佔用該終端機視窗顯示服務日誌——**看起來像卡住，其實是正常現象**，代表服務正在執行。不要關掉那個視窗，改開一個新的終端機視窗繼續後面的步驟。
+
+確認 Ollama 正在執行：
+
+```bash
+curl http://localhost:11434/api/tags
+```
+
+有回應（即使是空的 JSON）就代表正常。接著下載一個翻譯模型，擇一即可：
 
 ```bash
 # 選項 A：translategemma — 專為翻譯訓練，速度快、品質好（本專案預設）
@@ -177,6 +188,8 @@ curl -L -o models/ggml-small.en.bin \
 想要更高準確度可改下載 `ggml-medium.en.bin`（約 1.5GB，較慢），並在 `.env` 調整路徑。
 
 ### 4. 安裝專案
+
+> 需要 **Python 3.9 以上**（macOS 內建的 `python3`，例如來自 Xcode Command Line Tools 的 3.9，也可以正常使用）。
 
 ```bash
 cd Patrick-Speak
@@ -277,6 +290,12 @@ cp .env.example .env
 ---
 
 ## 常見問題
+
+**Q：執行 `./start.sh` 出現 `TypeError: unsupported operand type(s) for |: 'type' and 'NoneType'`？**
+這是舊版程式在較舊的 Python（如系統內建的 3.9）上的相容性問題，已修復。執行 `git pull` 更新到最新版即可（`.venv` 不需重建，直接 `./start.sh`）。
+
+**Q：跑 `curl -fsSL https://ollama.com/install.sh | sh` 之後終端機卡住不動？**
+不是卡住，是正常現象——這個安裝方式會直接啟動 Ollama 背景服務並佔用該視窗顯示服務日誌。不要關掉那個視窗，改開一個新的終端機視窗繼續操作。
 
 **Q：出現「Sign in to confirm you're not a bot」？**
 本專案已改用 yt-dlp 的 android 客戶端繞過此驗證，正常情況不會遇到。若仍遇到，可能是該影片有特殊限制（會員限定、地區封鎖），換一支公開影片即可。**不需要、也不建議**動用瀏覽器 cookies。
