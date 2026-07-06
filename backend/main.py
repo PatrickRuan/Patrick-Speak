@@ -259,30 +259,98 @@ def parse_lrc(lrc: str, total_duration: float) -> list[SubtitleEntry]:
     return entries
 
 
-def _pick_best_candidate(candidates: list[dict], total_duration: float) -> dict | None:
-    """從候選歌詞中挑時長最接近音訊的版本（避免拿到 remix/live 導致時間軸對不上）。"""
+def _first_lrc_time(lrc: str) -> float | None:
+    """取出 LRC 歌詞中第一句非空白歌詞的時間（秒）。"""
+    for line in lrc.split("\n"):
+        m = re.match(r"\[(\d+):(\d+(?:\.\d+)?)\]\s*(.*)", line.strip())
+        if m and m.group(3).strip():
+            return int(m.group(1)) * 60 + float(m.group(2))
+    return None
+
+
+def _pick_best_candidate(candidates: list[dict], total_duration: float,
+                         vocal_onset: float | None = None) -> dict | None:
+    """從候選歌詞中挑最可能對齊這個音訊的版本。
+    lrclib 是社群上傳的資料庫：即使時長相同的候選，第一句的起點也可能差好幾秒
+    （實測 Shape of You 同為 263s 的候選，第一句從 9.86s 到 15.82s 都有）。
+    因此先用時長過濾（±20s 排除 remix/live），再用「實測人聲起點」挑第一句
+    時間最接近的版本；沒有人聲起點資訊時退回挑時長最接近的。"""
     if not candidates:
         return None
-    if total_duration <= 0:
-        return candidates[0]
-    candidates = sorted(candidates, key=lambda r: abs((r.get("duration") or 0) - total_duration))
-    best = candidates[0]
-    if abs((best.get("duration") or 0) - total_duration) > 20:
+    if total_duration > 0:
+        candidates = [r for r in candidates
+                      if abs((r.get("duration") or 0) - total_duration) <= 20]
+        if not candidates:
+            return None
+    if vocal_onset is not None:
+        def onset_distance(r):
+            t = _first_lrc_time(r.get("syncedLyrics") or "")
+            return abs(t - vocal_onset) if t is not None else 9999.0
+        return min(candidates, key=onset_distance)
+    if total_duration > 0:
+        return min(candidates, key=lambda r: abs((r.get("duration") or 0) - total_duration))
+    return candidates[0]
+
+
+# 人聲起點偵測：探測前 45 秒（涵蓋多數官方 MV 的開場動畫），用 Silero VAD 模型
+VOCAL_ONSET_PROBE_SECONDS = 45.0
+VAD_BIN = os.getenv("VAD_BIN", "whisper-vad-speech-segments")
+VAD_MODEL = os.getenv("VAD_MODEL", str(BASE_DIR / "models" / "ggml-silero-v5.1.2.bin"))
+
+
+def detect_vocal_onset(audio_path: Path, video_id: str) -> float | None:
+    """用 VAD（語音活動偵測）找出音訊開頭第一段人聲的起點（秒）。
+    官方 MV 常有前奏動畫，音訊和歌詞資料庫的版本不一定對齊，需要實測校正。
+    （曾嘗試用 whisper 轉錄時間戳推算，但 whisper 會把前奏和第一句糊成一段、
+    起點錨在 0 秒，不可靠；VAD 是專門偵測「有沒有人聲」的模型，準確得多。）
+    模型檔或工具不存在時回 None（優雅降級，不擋流程）。"""
+    if not Path(VAD_MODEL).exists():
         return None
-    return best
+    probe_wav = AUDIO_CACHE / f"{video_id}_onset_probe.wav"
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(audio_path), "-t", str(VOCAL_ONSET_PROBE_SECONDS),
+         "-ar", "16000", "-ac", "1", str(probe_wav)],
+        capture_output=True, text=True,
+    )
+    try:
+        result = subprocess.run(
+            [VAD_BIN, "-f", str(probe_wav), "-vm", VAD_MODEL, "-np"],
+            capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        return None
+    finally:
+        probe_wav.unlink(missing_ok=True)
+    # 輸出格式：「Speech segment 0: start = 1408.00, end = 1443.00」，單位是 centisecond（10ms）
+    # （已實測驗證：1408 → 14.08 秒處剪下去正好是第一句歌詞）
+    for line in result.stdout.split("\n"):
+        m = re.search(r"Speech segment 0: start = ([\d.]+)", line)
+        if m:
+            return float(m.group(1)) / 100.0
+    return None
+
+
+# 注意：曾實作「用 VAD 起點自動平移歌詞時間軸」，實測發現 VAD 可能把前奏的
+# 和聲/墊音判為人聲（Styx - Babe 的 37.8s 正確起點被平移到 0.3s，災難性回歸），
+# 平移的風險大於收益，已移除。VAD 起點只用於「挑候選版本」（安全：不改時間軸，
+# 只做選擇），殘餘的小偏差交給前端的「歌詞對齊」手動微調鈕。
 
 
 LRCLIB_GET_API = "https://lrclib.net/api/get"
 
 
 async def fetch_lyrics(title: str, channel: str, total_duration: float,
-                       video_id: str, track: str = "", artist: str = "") -> list[SubtitleEntry]:
+                       video_id: str, audio_path: Path,
+                       track: str = "", artist: str = "") -> list[SubtitleEntry]:
     """用 lrclib 找同步英文歌詞。優先用 yt-dlp 給的精確 track/artist（如 YouTube Music）
     做精準比對；沒有精確欄位或找不到時，才退回模糊標題搜尋。找不到就明確報錯
     （不 fallback 到 whisper 亂猜歌詞——唱歌對 whisper 是硬傷）。"""
     cache_path = AUDIO_CACHE / f"{video_id}_lyrics.json"
     if cache_path.exists():
         return [SubtitleEntry(**e) for e in json.loads(cache_path.read_text())]
+
+    # 先實測這個音訊檔案的人聲起點，供「挑候選版本」與「時間軸校正」使用
+    vocal_onset = detect_vocal_onset(audio_path, video_id)
 
     best = None
     query_desc = clean_music_title(title)
@@ -307,7 +375,7 @@ async def fetch_lyrics(title: str, channel: str, total_duration: float,
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="歌詞服務暫時無法使用，請稍後再試。")
         candidates = [r for r in resp.json() if r.get("syncedLyrics")]
-        best = _pick_best_candidate(candidates, total_duration)
+        best = _pick_best_candidate(candidates, total_duration, vocal_onset)
         if best is None and candidates:
             raise HTTPException(
                 status_code=404,
@@ -511,7 +579,7 @@ async def process_video(req: VideoRequest):
                 f.unlink(missing_ok=True)
 
         if req.music:
-            entries = await fetch_lyrics(title, info["channel"], total_duration, video_id,
+            entries = await fetch_lyrics(title, info["channel"], total_duration, video_id, audio_path,
                                           info.get("track", ""), info.get("artist", ""))
         else:
             entries = transcribe_audio(audio_path, video_id, limit)

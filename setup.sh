@@ -98,6 +98,17 @@ else
     ok "Whisper 模型下載完成"
 fi
 
+# 5b. 下載 VAD 人聲偵測模型（音樂模式挑歌詞版本用，很小）
+VAD_PATH="models/ggml-silero-v5.1.2.bin"
+if [ -f "$VAD_PATH" ]; then
+    ok "VAD 人聲偵測模型已存在"
+else
+    echo "正在下載 VAD 人聲偵測模型（約 1MB）..."
+    curl -sL -o "$VAD_PATH" \
+        "https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v5.1.2.bin"
+    ok "VAD 模型下載完成"
+fi
+
 echo ""
 echo -e "${GREEN}${BOLD}安裝完成！${NC}"
 echo ""
