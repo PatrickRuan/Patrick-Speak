@@ -14,6 +14,33 @@ let playbackSpeed = parseFloat(localStorage.getItem("ps_speed") || "1");
 let pendingJump = null;  // 從最愛跳轉時暫存 {segIdx, sentIdx}
 let loadedUrl = null;    // 目前已載入結果的網址（用來決定「開始處理」是否變灰）
 let inputMode = "video"; // "video" | "music" — 目前輸入模式
+let lyricsOffset = 0;    // 歌詞時間軸偏移（秒），每首歌各自記在 localStorage
+
+// ---- 歌詞對齊手動微調（音樂模式）----
+function loadLyricsOffset() {
+    if (!appData) return 0;
+    try {
+        const m = JSON.parse(localStorage.getItem("ps_lyric_offsets") || "{}");
+        return m[appData.video_id] || 0;
+    } catch { return 0; }
+}
+
+function saveLyricsOffset() {
+    if (!appData) return;
+    try {
+        const m = JSON.parse(localStorage.getItem("ps_lyric_offsets") || "{}");
+        m[appData.video_id] = lyricsOffset;
+        localStorage.setItem("ps_lyric_offsets", JSON.stringify(m));
+    } catch { /* 存不進去就算了，不影響播放 */ }
+}
+
+function adjustLyricsOffset(delta) {
+    lyricsOffset = Math.round((lyricsOffset + delta) * 10) / 10;
+    saveLyricsOffset();
+    const disp = document.getElementById("offset-display");
+    if (disp) disp.textContent = `${lyricsOffset.toFixed(1)}s`;
+    replaySentence();  // 立即用新偏移重播目前句，聽得出差異
+}
 
 function setInputMode(mode) {
     inputMode = mode;
@@ -96,6 +123,7 @@ async function processVideo(full = false) {
         }
         appData = await resp.json();
         loadedUrl = url;  // 記住已載入的網址
+        lyricsOffset = loadLyricsOffset();  // 讀回這首歌已存的歌詞對齊偏移
         currentSegment = 0;
         currentSentence = 0;
         renderCurrentChannelBar();
@@ -649,6 +677,14 @@ function renderSegmentContent() {
                             onclick="setSpeed(${s})">${s}x</button>`).join('')}
             </div>
 
+            ${appData.music ? `
+            <div class="speed-btns" title="歌詞出現時還在前奏（人聲還沒到）→ 按 +；歌詞出現得太晚 → 按 −">
+                <span class="speed-label">歌詞對齊</span>
+                <button class="speed-btn" onclick="adjustLyricsOffset(-0.5)">−0.5s</button>
+                <span class="speed-label" id="offset-display">${lyricsOffset.toFixed(1)}s</span>
+                <button class="speed-btn" onclick="adjustLyricsOffset(0.5)">+0.5s</button>
+            </div>` : ''}
+
             ${currentMode === 'dictation' ? `
                 <div class="dictation-area">
                     <div class="timer-bar">
@@ -721,10 +757,12 @@ function playSentence() {
         audio.removeEventListener("timeupdate", sentenceEndHandler);
     }
 
+    // 音樂模式套用歌詞對齊偏移（+ 表示歌詞時間軸整體往後平移）
+    const off = appData.music ? lyricsOffset : 0;
     // 防呆：確保結束時間至少比起點晚一點，避免零長度句造成瞬間結束的迴圈
-    const endTime = Math.max(s.end, s.start + 0.4);
+    const endTime = Math.max(s.end, s.start + 0.4) + off;
 
-    audio.currentTime = s.start;
+    audio.currentTime = Math.max(0, s.start + off);
     audio.playbackRate = playbackSpeed;
     audio.play();
     isPlaying = true;
